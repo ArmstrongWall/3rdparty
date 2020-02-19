@@ -1,9 +1,31 @@
 #!/usr/bin/env bash
 mypasswd=wzq
 
+red='\e[0;41m' # 红色  
+RED='\e[1;31m'
+green='\e[0;32m' # 绿色  
+GREEN='\e[1;32m'
+yellow='\e[5;43m' # 黄色  
+YELLOW='\e[1;33m'
+blue='\e[0;34m' # 蓝色  
+BLUE='\e[1;34m'
+purple='\e[0;35m' # 紫色  
+PURPLE='\e[1;35m'
+cyan='\e[4;36m' # 蓝绿色  
+CYAN='\e[1;36m'
+WHITE='\e[1;37m' # 白色
+NC='\e[0m' # 没有颜色
+
+
 echo ${mypasswd} | sudo -S apt-get update
 sudo apt-get install -y build-essential
 sudo apt-get install -y cmake git
+## Install Glog Gflags
+sudo apt-get install -y vim cmake git
+sudo apt-get install -y libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev libgflags-dev libgoogle-glog-dev liblmdb-dev protobuf-compiler
+## Install Protobuf
+sudo apt-get install -y protobuf-compiler libprotobuf-dev libprotoc-dev
+sudo apt-get install -y libprotobuf-c0-dev protobuf-c-compiler
 
 cd ~/
 if [ -d "3rdparty/" ]; then
@@ -16,15 +38,12 @@ fi
 check_results=`pkg-config eigen3 --modversion`
 if [[ $check_results =~ "3.3.5" ]]
 then
-  echo "eigen3 zlib has already installed. "
+	echo -e "${GREEN}eigen3 has already installed. ${NC}"
 else
   cd ~/3rdparty/
-  if [ ! -f "eigen-3.3.tar.gz" ]; then
+  if [ ! -f "eigen.tar.gz" ]; then
     echo "no eigen file"
     git clone https://github.com/eigenteam/eigen-git-mirror.git
-	  cd ~/3rdparty/eigen-git-mirror
-  	git checkout origin/branches/3.3
-  	git checkout a66b5a59a6bc0be133bc09e86edbb8fcd6dc4cb2
   else
     echo "there is eigen file"
     tar -xzvf eigen.tar.gz
@@ -36,6 +55,8 @@ else
       fi
   fi
   cd ~/3rdparty/eigen-git-mirror
+  git checkout origin/branches/3.3
+  git checkout a66b5a59a6bc0be133bc09e86edbb8fcd6dc4cb2
   mkdir build
   cd build
   cmake ..
@@ -69,7 +90,7 @@ if [ ! -d "/usr/local/include/sophus/" ]; then
   cmake --build .
   echo ${mypasswd} | sudo -S make install
 else
-  echo "Sophus zlib has already installed."
+	echo -e "${GREEN}Sophus has already installed. ${NC}"
 fi
 
 
@@ -104,7 +125,7 @@ if [ ! -d "/usr/local/include/pangolin/" ]; then
   cmake --build .
   echo ${mypasswd} | sudo -S make install
 else
-  echo "Pangolin zlib has already installed."
+	echo -e "${GREEN}Pangolin has already installed. ${NC}"
 fi
 
 
@@ -136,7 +157,7 @@ if [ ! -d "/usr/local/include/ceres/" ]; then
 	cmake --build .
 	echo ${mypasswd} | sudo -S make install
 else
-  echo "ceres zlib has already installed."
+	echo -e "${GREEN}ceres has already installed. ${NC}"
 fi
 
 #install g2o
@@ -162,7 +183,7 @@ if [ ! -d "/usr/local/include/g2o/" ]; then
 	cmake --build .
 	echo ${mypasswd} | sudo -S make install
 else
-  echo "g2o zlib has already installed."
+	echo -e "${GREEN}g2o has already installed. ${NC}"
 fi
 
 
@@ -170,17 +191,17 @@ fi
 check_results=`pkg-config opencv --modversion`
 if [[ $check_results =~ "3.2.0" ]] 
 then 
-  echo "opencv zlib has already installed. "
+	echo -e "${GREEN}opencv has already installed. ${NC}"
 else 
   echo "This is going to install opencv zlib"
-  if [ ! -f "opencv-3.2.0.tar.gz" ]; then
+  if [ ! -f "3.2.0.tar.gz" ]; then
     echo "no opencv file"
     wget https://github.com/opencv/opencv/archive/3.2.0.tar.gz
   else
     echo "there is opencv file"
   fi
 
-  tar -xzvf opencv-3.2.0.tar.gz
+  tar -xzvf 3.2.0.tar.gz
   if [ $? -eq 0 ];then
       echo "success tar opencv file"
   else
@@ -198,21 +219,47 @@ else
 fi
 
 
+#install GeographicLib-1.50.1
+if [ ! -d "/usr/local/include/GeographicLib/" ]; then
+  cd ~/3rdparty/
+  if [ ! -f "GeographicLib-1.50.1.tar.gz" ]; then
+		echo -e "${RED}no GeographicLib file ${NC}"    
+		exit 1
+  else
+    echo "there is GeographicLib file"
+    tar -xzvf GeographicLib-1.50.1.tar.gz
+    if [ $? -eq 0 ];then
+        echo "success tar GeographicLib file"
+    else
+				echo -e "${RED}fail tar GeographicLib file ${NC}"
+        exit 1
+    fi
+  fi
+  cd ~/3rdparty/GeographicLib-1.50.1
+  mkdir build
+  cd build
+  cmake ..
+  cmake --build .
+  echo ${mypasswd} | sudo -S make install
+	echo ${mypasswd} | sudo -S mkdir -p /usr/local/share/GeographicLib
+  echo ${mypasswd} | sudo -S tar xofjC wgs84.tar.bz2 /usr/local/share/GeographicLib
+  echo ${mypasswd} | sudo -S tar xofjC wmm2020.tar.bz2 /usr/local/share/GeographicLib
+else
+	echo -e "${GREEN}GeographicLib has already installed. ${NC}"
+fi
 
-## Install Glog Gflags
-sudo apt-get install -y vim cmake git
-sudo apt-get install -y libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev libgflags-dev libgoogle-glog-dev liblmdb-dev protobuf-compiler
-## Install Protobuf
-sudo apt-get install -y protobuf-compiler libprotobuf-dev libprotoc-dev
-sudo apt-get install -y libprotobuf-c0-dev protobuf-c-compiler
 
 
 ## Install MYNT-EYE-D-SDK 
-cd ~/3rdparty/	
-git clone https://github.com/slightech/MYNT-EYE-D-SDK.git
-cd MYNT-EYE-D-SDK
-git checkout 2b15e36e2e6e131e1a7dc67c3bf6d1ba3e82dbab
-make init
-echo ${mypasswd} | sudo -S make all
-echo ${mypasswd} | sudo -S make install
+if [ ! -d "/usr/local/include/mynteyed/" ]; then
+  cd ~/3rdparty/
+  git clone https://github.com/slightech/MYNT-EYE-D-SDK.git
+  cd MYNT-EYE-D-SDK
+	git checkout 2b15e36e2e6e131e1a7dc67c3bf6d1ba3e82dbab
+	make init
+	echo ${mypasswd} | sudo -S make all
+	echo ${mypasswd} | sudo -S make install
+else
+	echo -e "${GREEN}MYNT-EYE-D-SDK has already installed. ${NC}"  
+fi
 
